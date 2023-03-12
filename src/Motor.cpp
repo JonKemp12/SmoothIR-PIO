@@ -50,9 +50,9 @@ void Motor::setup() {
 
 	// Attach motor encoder pulse pin to handler to maintain distance count
 	pinMode(_pulsePin, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(_pulsePin),_pulseHandler, CHANGE);
+	// attachInterrupt(digitalPinToInterrupt(_pulsePin), _pulseHandler, CHANGE);
 
-	_speedPID(&_currentSpeed, &_requiredSpeed, &_driveValue, SPEED_KP, SPEED_KI, SPEED_KD, DIRECT);
+	// _speedPID(&_currentSpeed, &_requiredSpeed, &_driveValue, SPEED_KP, SPEED_KI, SPEED_KD,  DIRECT);
 	_speedPID.SetMode(MANUAL);
 	_speedPID.SetOutputLimits(MIN_DRIVE_VALUE, MAX_DRIVE_VALUE);	// Set PWM min and max
 }

@@ -49,7 +49,7 @@ public:
 	Motor(SIDE);		// Constructor needs a specified motor
 	~Motor();
 	void setup();
-	volatile long distanceCount = 0;	// Up/down count of pulses from motor = distance driven
+	static volatile long distanceCount;	// Up/down count of pulses from motor = distance driven
 	void setSpeed(int);
 	void drive(int);		// Drive motor at a speed -100 - 0 +100
 	long getDistance();		// Return distance count
@@ -66,18 +66,16 @@ private:
 	double _requiredSpeed = 0;	// Target speed pulses/s
 	double _currentSpeed = 0;	// Actual speed pulses/s
 	double _driveValue = 0; 	// Value sent to PWM 0 - 255
-	byte _currentDir = STOPPED;
-	byte _prevDir = STOPPED;
+	static byte _currentDir;
+	static byte _prevDir;
 
 	// Vars to calculate time and distance changes
 	unsigned long _prevMicros = 0;
 	long _prevDistanceCount = 0;
 
-	PID_v2 _speedPID;
+	PID_v2 *_speedPID;
 
-	void _pulseHandler();	// Interrupt handler attached to _pulsePin;
-
-
+	static void _pulseHandler();	// Interrupt handler attached to _pulsePin;
 };
 
 #endif /* MOTOR_H_ */

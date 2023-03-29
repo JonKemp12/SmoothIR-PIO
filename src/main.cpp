@@ -38,7 +38,7 @@ enum DN {
 	GO_BACK, //backward
 	STOP_STOP,
 	DEF
-} Drive_Num = DEF;
+} Drive_Num;
 
 Motor leftMotor = Motor(LEFT);
 Motor rightMotor = Motor(RIGHT);

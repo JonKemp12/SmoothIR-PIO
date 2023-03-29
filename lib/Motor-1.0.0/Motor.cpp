@@ -20,6 +20,8 @@ Motor::Motor(SIDE side) {
 		_dirPin2 = RightDirectPin2;
 		_pulsePin = 3;
 	}
+
+	_speedPID = new PID_v2(SPEED_KP, SPEED_KI, SPEED_KD, PID::Direct, PID::P_On::Measurement);
 }
 
 int mySign(int num)
@@ -50,11 +52,10 @@ void Motor::setup() {
 
 	// Attach motor encoder pulse pin to handler to maintain distance count
 	pinMode(_pulsePin, INPUT_PULLUP);
-	// attachInterrupt(digitalPinToInterrupt(_pulsePin), _pulseHandler, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(_pulsePin), &(Motor::_pulseHandler), CHANGE);
 
-	// _speedPID(&_currentSpeed, &_requiredSpeed, &_driveValue, SPEED_KP, SPEED_KI, SPEED_KD,  DIRECT);
-	_speedPID.SetMode(MANUAL);
-	_speedPID.SetOutputLimits(MIN_DRIVE_VALUE, MAX_DRIVE_VALUE);	// Set PWM min and max
+	_speedPID->SetMode(MANUAL);
+	_speedPID->SetOutputLimits(MIN_DRIVE_VALUE, MAX_DRIVE_VALUE);	// Set PWM min and max
 }
 
 /* drive(speed) sets the PWM output
@@ -74,7 +75,7 @@ void Motor::drive(int speed) {
 
 	_currentSpeed = deltaCount * 1000000 / deltaMicros;		// in distCounts/s
 	_requiredSpeed = speed * SPEEDSCALER;
-	_speedPID.Compute();
+	_speedPID->Compute();
 
 	// Eval driving direction
 	byte newDir = mySign(_driveValue);

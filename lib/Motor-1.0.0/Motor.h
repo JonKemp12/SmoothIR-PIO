@@ -21,10 +21,12 @@ enum SIDE {
 #define speedPinR 5    			// RIGHT PWM pin connect MODEL-X ENA
 #define RightDirectPin1  7   	// Right Motor direction pin 1 to MODEL-X IN1
 #define RightDirectPin2  8    	// Right Motor direction pin 2 to MODEL-X IN2
+#define RightPulsePin	 3
 
 #define speedPinL 6    		 // Left PWM pin connect MODEL-X ENB
 #define LeftDirectPin1  9    // Left Motor direction pin 1 to MODEL-X IN3
 #define LeftDirectPin2  10   // Left Motor direction pin 1 to MODEL-X IN4
+#define LeftPulsePin	2
 
 #define MIN_DRIVE_VALUE -255	// Minimum PWM value (actually always +ve!)
 #define MAX_DRIVE_VALUE  255	// Max PWM value
@@ -43,31 +45,37 @@ enum SIDE {
 #define MAX_PULSES_PER_SEC 800		// Derived from testing motor at max PWM value
 #define SPEEDSCALER MAX_PULSES_PER_SEC/100
 
+struct SideVars {
+	volatile long distanceCount;	// Up/down count of pulses from motor = distance driven
+	byte currentDir;
+	byte prevDir;
+	byte pulsePin;					// Pin attached to interrupt routine to count pulses
+};
 
 class Motor {
 public:
 	Motor(SIDE);		// Constructor needs a specified motor
 	~Motor();
 	void setup();
-	static volatile long distanceCount;	// Up/down count of pulses from motor = distance driven
+	static SideVars sides[2];
 	void setSpeed(int);
 	void drive(int);		// Drive motor at a speed -100 - 0 +100
 	long getDistance();		// Return distance count
 	double getCurrentSpeed();
+	static void pulseHandlerLeft();	// Interrupt handler attached to pulsePin;
+	static void pulseHandlerRight();	// Interrupt handler attached to pulsePin;
 
 private:
+	int	 _sideInstance;	// Used as instance index to each side
 	byte _speedPin;		// PWM pin for this motor
 	byte _dirPin1;		// direction Pin1 for this motor
 	byte _dirPin2;		// direction Pin2 for this moto
-	byte _pulsePin;		// Pin attached to interrupt routine to count pulses
 
 	int _cmdSpeed = 0;		// Desired motor speed -100 - 0 +100
 
 	double _requiredSpeed = 0;	// Target speed pulses/s
 	double _currentSpeed = 0;	// Actual speed pulses/s
 	double _driveValue = 0; 	// Value sent to PWM 0 - 255
-	static byte _currentDir;
-	static byte _prevDir;
 
 	// Vars to calculate time and distance changes
 	unsigned long _prevMicros = 0;
@@ -75,7 +83,6 @@ private:
 
 	PID_v2 *_speedPID;
 
-	static void _pulseHandler();	// Interrupt handler attached to _pulsePin;
 };
 
 #endif /* MOTOR_H_ */

@@ -216,16 +216,14 @@ void doIRTick() {
 	}
 }
 
+// Instantiate the two motors
+Motor leftMotor(LEFT);
+Motor rightMotor(RIGHT);
 
 void setup() {
-	pinMode(RightDirectPin1, OUTPUT);
-	pinMode(RightDirectPin2, OUTPUT);
-	pinMode(speedPinL, OUTPUT);
-	pinMode(LeftDirectPin1, OUTPUT);
-	pinMode(LeftDirectPin2, OUTPUT);
-	pinMode(speedPinR, OUTPUT);
-	cmdSpeedL = 0;
-	cmdSpeedR = 0;
+	
+	attachInterrupt(digitalPinToInterrupt(LeftPulsePin), Motor::pulseHandlerLeft, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RightPulsePin), Motor::pulseHandlerRight, CHANGE);
 
 	pinMode(IR_PIN, INPUT);
 	digitalWrite(IR_PIN, HIGH);

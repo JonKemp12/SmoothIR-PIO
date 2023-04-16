@@ -8,29 +8,29 @@
 
 #include "Motor.h"
 
-Motor::Motor(SIDE side) {
+Motor::Motor(MOTORS side, MotorCounter *countPtr) {
 	_sideInstance = side;			// Identify which side instance this is.
-	SideVars *sidePtr = &sides[side];
-		sidePtr->distanceCount = 0;
-		sidePtr->currentDir = 0;
-		sidePtr->prevDir = 0;
+	_countPtr = countPtr;
+	_countPtr->distanceCount = 0;
+	_countPtr->currentDir = 0;
+	_countPtr->prevDir = 0;
 	if (side == LEFT) {
 		_speedPin = speedPinL;
 		_dirPin1 = LeftDirectPin1;
 		_dirPin2 = LeftDirectPin2;
-		sidePtr->pulsePin = LeftPulsePin;
+		_countPtr->pulsePin = LeftPulsePin;
 	} else {
 		_speedPin = speedPinR;
 		_dirPin1 = RightDirectPin1;
 		_dirPin2 = RightDirectPin2;
-		sidePtr->pulsePin = RightPulsePin;
+		_countPtr->pulsePin = RightPulsePin;
 	}
 
 	// Initialise motor IO pinModes
 	pinMode(_dirPin1, OUTPUT);
 	pinMode(_dirPin2, OUTPUT);
 	pinMode(_speedPin, OUTPUT);
-	pinMode(sidePtr->pulsePin, INPUT_PULLUP);
+	pinMode(_countPtr->pulsePin, INPUT_PULLUP);
 
 	// Create PID instance for this motor instance
 	_speedPID = new PID_v2(SPEED_KP, SPEED_KI, SPEED_KD, PID::Direct, PID::P_On::Measurement);
@@ -49,31 +49,13 @@ int mySign(int num)
 	return 0;
 }
 
-void Motor::pulseHandlerLeft() {
-	SideVars *sidePtr = &sides[LEFT];
-	if (sidePtr->currentDir == 0) {
-		sidePtr->distanceCount += sidePtr->prevDir;
-	} else {
-		sidePtr->distanceCount += sidePtr->currentDir;
-	}
-}
-void Motor::pulseHandlerRight() {
-	SideVars *sidePtr = &sides[RIGHT];
-	if (sidePtr->currentDir == 0) {
-		sidePtr->distanceCount += sidePtr->prevDir;
-	} else {
-		sidePtr->distanceCount += sidePtr->currentDir;
-	}
-}
-
-
 /* drive(speed) sets the PWM output
  * Args: speed -100 - 0 - +100
  */
 void Motor::drive(int speed) {
 	unsigned long currentMicros = millis();
 	unsigned long deltaMicros;
-	SideVars *sidePtr = &sides[_sideInstance];
+
 	if (currentMicros < _prevMicros) { // overflow
 		deltaMicros = _prevMicros + currentMicros + currentMicros;
 	} else {
@@ -81,32 +63,43 @@ void Motor::drive(int speed) {
 	}
 	_prevMicros = currentMicros;
 
-	long deltaCount = _prevDistanceCount - sidePtr->distanceCount;
+	long deltaCount = _prevDistanceCount - _countPtr->distanceCount;
 
 	_currentSpeed = deltaCount * 1000000 / deltaMicros;		// in distCounts/s
 	_requiredSpeed = speed * SPEEDSCALER;
+	// speedPID.Compute takes currentSpeed and reqiredSpeed and calculates driveValue
 	_speedPID->Compute();
+
+	setDriveValue((int)_driveValue);
+}
+
+void Motor::setDriveValue(int value) {
+	// Ensure -255 - 255
+	value = (value < -255) ? -255 : value;
+	value = (value >  255) ?  255 : value;
+	
+	_driveValue = (double)value;
 
 	// Eval driving direction
 	byte newDir = mySign(_driveValue);
-	if(sidePtr->currentDir != newDir ) {
+	if(_countPtr->currentDir != newDir ) {
 		// Change of direction
-		sidePtr->prevDir = sidePtr->currentDir;
+		_countPtr->prevDir = _countPtr->currentDir;
 	}
-	sidePtr->currentDir = newDir;
+	_countPtr->currentDir = newDir;
 
 	// Update PWM driver
-	if (_driveValue > 0) {
+	if (value > 0) {
 		digitalWrite(_dirPin1, LOW);
 		digitalWrite(_dirPin2, HIGH);
-		analogWrite(_speedPin, _driveValue);
+		analogWrite(_speedPin, value);
 	}
-	if (_driveValue < 0) {
+	if (value < 0) {
 		digitalWrite(_dirPin1, HIGH);
 		digitalWrite(_dirPin2, LOW);
-		analogWrite(speedPinL, abs(_driveValue));
+		analogWrite(speedPinL, abs(value));
 	}
-	if (_driveValue == 0) {
+	if (value == 0) {
 		digitalWrite(_dirPin1, LOW);
 		digitalWrite(_dirPin2, LOW);
 	}

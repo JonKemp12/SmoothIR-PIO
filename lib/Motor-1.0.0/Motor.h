@@ -12,9 +12,10 @@
 #include "Arduino.h"
 #include "PID_v2.h"
 
-enum SIDE {
+enum MOTORS {
 	LEFT,
-	RIGHT
+	RIGHT,
+	MAX_MOTORS
 };
 
 // Motor PWM hardware constants
@@ -45,7 +46,7 @@ enum SIDE {
 #define MAX_PULSES_PER_SEC 800		// Derived from testing motor at max PWM value
 #define SPEEDSCALER MAX_PULSES_PER_SEC/100
 
-struct SideVars {
+struct MotorCounter {
 	volatile long distanceCount;	// Up/down count of pulses from motor = distance driven
 	byte currentDir;
 	byte prevDir;
@@ -54,19 +55,18 @@ struct SideVars {
 
 class Motor {
 public:
-	Motor(SIDE);		// Constructor needs a specified motor
+    Motor(MOTORS side, MotorCounter *countPtr);		// Constructor needs a specified motor and counter struct
 	~Motor();
 	void setup();
-	static SideVars sides[2];
-	void setSpeed(int);
-	void drive(int);		// Drive motor at a speed -100 - 0 +100
-	long getDistance();		// Return distance count
-	double getCurrentSpeed();
-	static void pulseHandlerLeft();	// Interrupt handler attached to pulsePin;
-	static void pulseHandlerRight();	// Interrupt handler attached to pulsePin;
+	static MotorCounter sides[MAX_MOTORS];
+	void drive(int);					// Drive motor at a speed -100 - 0 +100
+    void setDriveValue(int value);		// Set PWM value directly
+    long getDistance(); 				// Return distance count
+    double getCurrentSpeed();
 
 private:
 	int	 _sideInstance;	// Used as instance index to each side
+	MotorCounter *_countPtr;	// Pointer to static MotorCounter struct
 	byte _speedPin;		// PWM pin for this motor
 	byte _dirPin1;		// direction Pin1 for this motor
 	byte _dirPin2;		// direction Pin2 for this moto

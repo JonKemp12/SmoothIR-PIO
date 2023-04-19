@@ -47,7 +47,7 @@ enum MOTORS {
 #define SPEEDSCALER MAX_PULSES_PER_SEC/100
 
 struct MotorCounter {
-	volatile long distanceCount;	// Up/down count of pulses from motor = distance driven
+	long distanceCount;	// Up/down count of pulses from motor = distance driven
 	byte currentDir;
 	byte prevDir;
 	byte pulsePin;					// Pin attached to interrupt routine to count pulses
@@ -58,7 +58,6 @@ public:
     Motor(MOTORS side, MotorCounter *countPtr);		// Constructor needs a specified motor and counter struct
 	~Motor();
 	void setup();
-	static MotorCounter sides[MAX_MOTORS];
 	void drive(int);					// Drive motor at a speed -100 - 0 +100
     void setDriveValue(int value);		// Set PWM value directly
     int getDriveValue();				// Return current PWM value
@@ -66,7 +65,7 @@ public:
     double getCurrentSpeed();
 
 private:
-	int	 _sideInstance;	// Used as instance index to each side
+	byte _sideInstance;	// Used as instance index to each side
 	MotorCounter *_countPtr;	// Pointer to static MotorCounter struct
 	byte _speedPin;		// PWM pin for this motor
 	byte _dirPin1;		// direction Pin1 for this motor
@@ -83,7 +82,6 @@ private:
 	long _prevDistanceCount = 0;
 
 	PID_v2 *_speedPID;
-
 };
 
 #endif /* MOTOR_H_ */

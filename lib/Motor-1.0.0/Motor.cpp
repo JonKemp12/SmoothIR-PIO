@@ -34,8 +34,9 @@ Motor::Motor(MOTORS side, MotorCounter *countPtr) {
 
 	// Create PID instance for this motor instance
 	_speedPID = new PID_v2(SPEED_KP, SPEED_KI, SPEED_KD, PID::Direct, PID::P_On::Measurement);
-	_speedPID->SetMode(MANUAL);
+	// _speedPID->SetMode(MANUAL);
 	_speedPID->SetOutputLimits(MIN_DRIVE_VALUE, MAX_DRIVE_VALUE);	// Set PWM min and max
+	_speedPID->Start(0,0,0);
 }
 
 int mySign(int num)
@@ -53,7 +54,7 @@ int mySign(int num)
  * Args: speed -100 - 0 - +100
  */
 void Motor::drive(int speed) {
-	unsigned long currentMicros = millis();
+	unsigned long currentMicros = micros();
 	unsigned long deltaMicros;
 
 	if (currentMicros < _prevMicros) { // overflow
@@ -64,11 +65,23 @@ void Motor::drive(int speed) {
 	_prevMicros = currentMicros;
 
 	long deltaCount = _countPtr->distanceCount - _prevDistanceCount;
+	_prevDistanceCount = _countPtr->distanceCount;
 
 	_currentSpeed = deltaCount * 1000000 / deltaMicros;		// in distCounts/s
 	_requiredSpeed = speed * SPEEDSCALER;
-	// speedPID.Compute takes currentSpeed and reqiredSpeed and calculates driveValue
-	_speedPID->Compute();
+
+	// PID.SetPoint - set the target speed
+	// PID.Run - calculates the output to achieve set point.ß
+
+	_speedPID->Setpoint(_requiredSpeed);
+	_driveValue = _speedPID->Run(_currentSpeed);
+
+		Serial.print("req:");
+	Serial.print(_requiredSpeed);
+		Serial.print(", cur:");
+	Serial.print(_currentSpeed);
+		Serial.print(", val:");
+	Serial.println(_driveValue);
 
 	setDriveValue((int)_driveValue);
 }

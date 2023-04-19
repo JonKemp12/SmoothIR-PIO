@@ -118,9 +118,17 @@ void waitFor(unsigned long button)
 
 // Update the motors with given speed values
 void doMotorUpdate(int leftSpeed, int rightSpeed) {
-	leftMotor.drive(leftSpeed);
+	// leftMotor.drive(leftSpeed);
 	rightMotor.drive(rightSpeed);
 }
+
+
+#define NUM_COUNTS 101
+int times[NUM_COUNTS];
+int leftCounts[NUM_COUNTS];
+int rightCounts[NUM_COUNTS];
+int leftDriveValues[NUM_COUNTS];
+int rightDriveValues[NUM_COUNTS];
 
 void loop() {
 	// Wait for IR advance press
@@ -130,16 +138,7 @@ void loop() {
 	// Drive and stop
 	Serial.println("Running left & right at 100");
 
-	// Capture counts and times
-
-#define NUM_COUNTS 101
-
 unsigned long startTime = millis();
-int times[NUM_COUNTS];
-int leftCounts[NUM_COUNTS];
-int rightCounts[NUM_COUNTS];
-int leftDriveValues[NUM_COUNTS];
-int rightDriveValues[NUM_COUNTS];
 
 	for (int i = 0; i < NUM_COUNTS; i++)
 	{
@@ -149,6 +148,8 @@ int rightDriveValues[NUM_COUNTS];
 			doMotorUpdate(100, 100);
 			elapsedTime = millis() - loopStart;
 		}
+
+		// Capture counts and times
 		times[i] = millis() - startTime;
 		leftCounts[i] = leftCounter.distanceCount;
 		rightCounts[i] = rightCounter.distanceCount;

@@ -63,7 +63,7 @@ void Motor::drive(int speed) {
 	}
 	_prevMicros = currentMicros;
 
-	long deltaCount = _prevDistanceCount - _countPtr->distanceCount;
+	long deltaCount = _countPtr->distanceCount - _prevDistanceCount;
 
 	_currentSpeed = deltaCount * 1000000 / deltaMicros;		// in distCounts/s
 	_requiredSpeed = speed * SPEEDSCALER;
@@ -105,8 +105,12 @@ void Motor::setDriveValue(int value) {
 	}
 }
 
+int Motor::getDriveValue() {
+	return(_driveValue);
+}
+
 long Motor::getDistance() {
-	return(sides[_sideInstance].distanceCount);
+	return(_countPtr->distanceCount);
 }
 
 double Motor::getCurrentSpeed() {

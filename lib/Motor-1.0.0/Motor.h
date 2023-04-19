@@ -61,6 +61,7 @@ public:
 	static MotorCounter sides[MAX_MOTORS];
 	void drive(int);					// Drive motor at a speed -100 - 0 +100
     void setDriveValue(int value);		// Set PWM value directly
+    int getDriveValue();				// Return current PWM value
     long getDistance(); 				// Return distance count
     double getCurrentSpeed();
 

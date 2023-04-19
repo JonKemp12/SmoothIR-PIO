@@ -88,8 +88,8 @@ void doIRTick() {
 
 void setup() 
 {	
-	attachInterrupt(digitalPinToInterrupt(LeftPulsePin), pulseHandlerLeft, CHANGE);
-	attachInterrupt(digitalPinToInterrupt(RightPulsePin), pulseHandlerRight, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(leftCounter.pulsePin), pulseHandlerLeft, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(rightCounter.pulsePin), pulseHandlerRight, CHANGE);
 
 	pinMode(IR_PIN, INPUT);
 	digitalWrite(IR_PIN, HIGH);
@@ -116,31 +116,44 @@ void waitFor(unsigned long button)
 	}
 }
 
+// Update the motors with given speed values
+void doMotorUpdate(int leftSpeed, int rightSpeed) {
+	leftMotor.drive(leftSpeed);
+	rightMotor.drive(rightSpeed);
+}
+
 void loop() {
 	// Wait for IR advance press
 	Serial.println("Waiting for IR_ADVANCE");
 	waitFor(IR_ADVANCE);
 
 	// Drive and stop
-	Serial.println("Running left & right at 200");
-	leftMotor.setDriveValue(200);
-	rightMotor.setDriveValue(200);
+	Serial.println("Running left & right at 100");
 
 	// Capture counts and times
 
-#define NUM_COUNTS 100
+#define NUM_COUNTS 101
 
 unsigned long startTime = millis();
-long times[NUM_COUNTS];
-long leftCounts[NUM_COUNTS];
-long rightCounts[NUM_COUNTS];
+int times[NUM_COUNTS];
+int leftCounts[NUM_COUNTS];
+int rightCounts[NUM_COUNTS];
+int leftDriveValues[NUM_COUNTS];
+int rightDriveValues[NUM_COUNTS];
 
 	for (int i = 0; i < NUM_COUNTS; i++)
 	{
+		int loopStart = millis();
+		int elapsedTime = 0;
+		while(elapsedTime < 20) {
+			doMotorUpdate(100, 100);
+			elapsedTime = millis() - loopStart;
+		}
 		times[i] = millis() - startTime;
 		leftCounts[i] = leftCounter.distanceCount;
 		rightCounts[i] = rightCounter.distanceCount;
-		delay(10);
+		leftDriveValues[i] = leftMotor.getDriveValue();
+		rightDriveValues[i] = rightMotor.getDriveValue();
 	}
 	
 	Serial.println("Running left & right at 0");
@@ -152,17 +165,20 @@ long rightCounts[NUM_COUNTS];
 	waitFor(IR_STOP);
 
 	// Print captured data
-	Serial.println("Time,leftCount,rightCount");
-	for (int i = 0; i < NUM_COUNTS; i++)
+	Serial.println("Time,leftCount,rightCount,leftChange,rightChange");
+	for (int i = 1; i < NUM_COUNTS; i++)
 	{
 		Serial.print(times[i]);
 		Serial.print(",");
 		Serial.print(leftCounts[i]);
 		Serial.print(",");
 		Serial.print(rightCounts[i]);
+		Serial.print(",");
+		Serial.print(leftDriveValues[i]);
+		Serial.print(",");
+		Serial.print(rightDriveValues[i]);
 		Serial.println();
 	}
 	
 	// doIRTick();
-	// doDriveTick();
 }
